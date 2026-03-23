@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>STRIKE — Daily Workout</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080808">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STRIKE">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --surface: #111;
+  --surface-2: #181818;
+  --surface-3: #222;
+  --border: #252525;
+  --border-bright: #333;
+  --text: #e8e8e8;
+  --text-dim: #666;
+  --text-muted: #333;
+  --red: #ff3333;
+  --red-dim: #7a1a1a;
+  --red-bg: rgba(255,51,51,0.07);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.07);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.07);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59,130,246,0.08);
+  --blue-border: rgba(59,130,246,0.3);
+  --mob-color: #a78bfa;
+  --mob-bg: rgba(167,139,250,0.08);
+  --mob-border: rgba(167,139,250,0.25);
+  --plyo-color: #fb923c;
+  --plyo-bg: rgba(251,146,60,0.08);
+  --plyo-border: rgba(251,146,60,0.25);
+  --shadow-color: #34d399;
+  --shadow-bg: rgba(52,211,153,0.08);
+  --shadow-border: rgba(52,211,153,0.25);
+  --radius: 8px;
+  --radius-lg: 14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: -webkit-fill-available; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ── NOISE ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── TABS ── */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  display: flex;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 0 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.tab-btn.active { color: var(--red); }
+
+.tab-icon { font-size: 20px; line-height: 1; }
+.tab-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* ── PAGES ── */
+.page { display: none; padding-bottom: 80px; }
+.page.active { display: block; }
+
+/* ── HEADER ── */
+.app-header {
+  padding: 18px 16px 0;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.logo em { color: var(--red); font-style: normal; }
+.logo-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.header-date {
+  text-align: right;
+}
+.date-day {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+}
+.date-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── STATUS BANNER ── */
+.status-banner {
+  margin: 12px 16px 0;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.status-banner .status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.status-banner.connected .status-dot { background: var(--green); }
+.status-banner.error .status-dot { background: var(--red); }
+.status-banner.loading .status-dot {
+  background: var(--amber);
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+.status-text { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5px; }
+
+/* ── WORKOUT SECTION ── */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 8px;
+}
+.section-label-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.section-label-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.section-label-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* ── EXERCISE CARDS ── */
+.exercise-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+
+.exercise-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.exercise-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+
+.exercise-card.mob { border-color: var(--mob-border); }
+.exercise-card.mob::before { background: var(--mob-color); }
+.exercise-card.plyo { border-color: var(--plyo-border); }
+.exercise-card.plyo::before { background: var(--plyo-color); }
+.exercise-card.shadow { border-color: var(--shadow-border); }
+.exercise-card.shadow::before { background: var(--shadow-color); }
+
+.exercise-card.done {
+  opacity: 0.5;
+  background: var(--surface-2);
+}
+
+.ex-check {
+  width: 26px; height: 26px; min-width: 26px;
+  border: 2px solid var(--border-bright);
+  border-radius: 6px;
+  background: var(--surface-3);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+  touch-action: manipulation;
+}
+.ex-check:checked {
+  background: var(--green);
+  border-color: var(--green);
+}
+.ex-check:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px; top: 3px;
+  width: 8px; height: 12px;
+  border: 2px solid #fff;
+  border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+
+.ex-info { flex: 1; }
+.ex-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+.ex-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+}
+
+.ex-freq {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+  min-width: 36px;
+  text-align: center;
+}
+.freq-zero { background: var(--surface-3); color: var(--text-muted); }
+.freq-low { background: var(--red-bg); color: var(--red); }
+.freq-mid { background: var(--amber-bg); color: var(--amber); }
+.freq-high { background: var(--green-bg); color: var(--green); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  padding: 40px 16px;
+  text-align: center;
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.empty-sub { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+/* ── GENERATE BUTTON ── */
+.generate-wrap { padding: 14px 16px 8px; }
+
+.btn-generate {
+  width: 100%;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-generate:active { background: var(--red-dim); transform: scale(0.98); }
+.btn-generate:disabled { background: var(--surface-3); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+.btn-log {
+  width: 100%;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-log:active { transform: scale(0.98); opacity: 0.85; }
+.btn-log:disabled { background: var(--surface-3); color: var(--text-dim); cursor: not-allowed; }
+
+/* ── FREQUENCY OVERVIEW ── */
+.freq-overview {
+  padding: 12px 16px 0;
+}
+
+.freq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.freq-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 10px 8px;
+}
+
+.freq-cell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.freq-cell-bars { display: flex; flex-direction: column; gap: 4px; }
+
+.freq-bar-row { display: flex; align-items: center; gap: 5px; }
+
+.freq-bar-name {
+  font-size: 9px;
+  color: var(--text-dim);
+  width: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.freq-bar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.freq-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.freq-bar-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-muted);
+  width: 12px;
+  text-align: right;
+}
+
+/* ── HISTORY PAGE ── */
+.history-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.history-date {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.history-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.history-badge.completed { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.history-badge.partial { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+
+.history-groups { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.history-group-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.history-group-label.mob { color: var(--mob-color); }
+.history-group-label.plyo { color: var(--plyo-color); }
+.history-group-label.shadow { color: var(--shadow-color); }
+
+.history-exercises {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.history-tag {
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface-3);
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── SETTINGS PAGE ── */
+.settings-body { padding: 0 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.settings-card-header {
+  padding: 12px 14px 10px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.settings-field { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.settings-field:last-child { border-bottom: none; }
+.settings-field label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.settings-field input, .settings-field textarea {
+  width: 100%;
+  background: var(--surface-3);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.settings-field input:focus, .settings-field textarea:focus {
+  border-color: var(--red);
+}
+.settings-field textarea { resize: vertical; min-height: 70px; }
+.settings-field .field-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.btn-save {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  touch-action: manipulation;
+}
+.btn-save:active { background: var(--surface-3); transform: scale(0.98); }
+
+.settings-info {
+  background: var(--blue-bg);
+  border: 1px solid var(--blue-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.settings-info strong { color: var(--blue); font-weight: 600; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--surface-3);
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  border-radius: 100px;
+  opacity: 0;
+  transition: all 0.25s ease;
+  z-index: 200;
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: calc(100vw - 32px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green-bg); border-color: rgba(34,197,94,0.3); color: var(--green); }
+.toast.error { background: var(--red-bg); border-color: rgba(255,51,51,0.3); color: var(--red); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.15s ease; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.modal {
+  background: var(--surface-2);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  max-width: 320px;
+  width: 100%;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { transform:scale(0.94); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+.modal-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 18px; letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.modal-body { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin-bottom: 18px; }
+.modal-btns { display: flex; gap: 8px; }
+.modal-btns .btn-save, .modal-btns .btn-generate { flex: 1; }
+
+/* ── SPINNER ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+.spinner.show { display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SCROLLABLE AREA ── */
+.scroll-area { overflow-y: auto; }
+
+/* coverage bar */
+.coverage-bar-wrap {
+  margin: 10px 16px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.coverage-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.coverage-track {
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.coverage-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--red), var(--amber));
+  transition: width 0.5s ease;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ TODAY PAGE ══════════════════════════════ -->
+<div class="page active" id="page-today">
+  <div class="app-header">
+    <div class="header-row">
+      <div>
+        <div class="logo">STR<em>IKE</em></div>
+        <div class="logo-sub">Daily Workout</div>
+      </div>
+      <div class="header-date">
+        <div class="date-day" id="dateDay">—</div>
+        <div class="date-label" id="dateLabel">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-banner loading" id="statusBanner">
+    <div class="status-dot"></div>
+    <div class="status-text" id="statusText">Connecting to Sheets…</div>
+  </div>
+
+  <!-- Coverage progress -->
+  <div class="coverage-bar-wrap" id="coverageWrap" style="display:none">
+    <div class="coverage-label">
+      <span>Full Coverage Progress</span>
+      <span id="coveragePct">0%</span>
+    </div>
+    <div class="coverage-track">
+      <div class="coverage-fill" id="coverageFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <div class="generate-wrap">
+    <button class="btn-generate" id="btnGenerate" onclick="generateWorkout()">
+      <span class="spinner" id="genSpinner"></span>
+      <span id="genBtnText">⚡ Generate Today's Workout</span>
+    </button>
+  </div>
+
+  <!-- Workout display -->
+  <div id="workoutDisplay"></div>
+
+  <!-- Log button -->
+  <div class="generate-wrap" id="logWrap" style="display:none">
+    <button class="btn-log" id="btnLog" onclick="openLogModal()">✓ Log This Session</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ HISTORY PAGE ══════════════════════════════ -->
+<div class="page" id="page-history">
+  <div class="app-header">
+    <div class="header-row">
+      <div>
+        <div class="logo">STR<em>IKE</em></div>
+        <div class="logo-sub">Session History</div>
+      </div>
+      <div class="header-date">
+        <div class="date-day" style="font-size:14px;color:var(--text-dim)" id="histCount">—</div>
+        <div class="date-label">Sessions</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="history-list" id="historyList">
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No History Yet</div>
+      <div class="empty-sub">Your logged sessions will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ FREQUENCY PAGE ══════════════════════════════ -->
+<div class="page" id="page-freq">
+  <div class="app-header">
+    <div class="header-row">
+      <div>
+        <div class="logo">STR<em>IKE</em></div>
+        <div class="logo-sub">Frequency (30d)</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:10px"></div>
+  <div class="freq-overview">
+    <div class="freq-grid" id="freqGrid">
+      <div class="freq-cell"><div class="freq-cell-label">Mobility</div><div class="freq-cell-bars" id="freqMob"></div></div>
+      <div class="freq-cell"><div class="freq-cell-label">Plyometrics</div><div class="freq-cell-bars" id="freqPlyo"></div></div>
+      <div class="freq-cell"><div class="freq-cell-label">Shadow Box</div><div class="freq-cell-bars" id="freqShadow"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SETTINGS PAGE ══════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="app-header">
+    <div class="header-row">
+      <div>
+        <div class="logo">STR<em>IKE</em></div>
+        <div class="logo-sub">Settings</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="settings-body">
+
+    <div class="settings-info">
+      Paste your <strong>Google Apps Script Web App URL</strong> below. The app uses this to read your workout history and log new sessions — no backend required.
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-header">Apps Script</div>
+      <div class="settings-field">
+        <label>Web App URL</label>
+        <input type="url" id="settingsUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="field-hint">Deploy your Apps Script as a Web App (Execute as: Me, Access: Anyone). Paste the /exec URL here.</div>
+      </div>
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">Save & Connect</button>
+
+    <div class="settings-card">
+      <div class="settings-card-header">Connection Test</div>
+      <div class="settings-field">
+        <button class="btn-save" onclick="testConnection()" style="margin-bottom:8px">Test Connection</button>
+        <div class="field-hint" id="testResult" style="font-family:'JetBrains Mono',monospace;font-size:10px">—</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TAB BAR ── -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('today')" id="tab-today">
+    <span class="tab-icon">⚡</span>
+    <span class="tab-label">Today</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('history')" id="tab-history">
+    <span class="tab-icon">📋</span>
+    <span class="tab-label">History</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('freq')" id="tab-freq">
+    <span class="tab-icon">📊</span>
+    <span class="tab-label">Frequency</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('settings')" id="tab-settings">
+    <span class="tab-icon">⚙️</span>
+    <span class="tab-label">Setup</span>
+  </button>
+</nav>
+
+<!-- ── LOG MODAL ── -->
+<div class="modal-overlay" id="logModal">
+  <div class="modal">
+    <div class="modal-title">Log This Session?</div>
+    <div class="modal-body" id="logModalBody">
+      This will save today's workout to your Google Sheet.
+      <br><br>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="logCompleted" checked style="width:18px;height:18px;accent-color:var(--green)">
+        <span>Marked as completed</span>
+      </label>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="closeLogModal()">Cancel</button>
+      <button class="btn-generate" onclick="confirmLog()">
+        <span class="spinner" id="logSpinner"></span>
+        <span id="logBtnText">Log It</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// WORKOUT DATA
+// ══════════════════════════════════════════════════════
+const WORKOUTS = {
+  mobility: [
+    'Army Walk', 'Crab Walk', 'Duck Walk', 'Frog Jumps',
+    'Lizard Walk', 'Bear Crawls', 'Pogos'
+  ],
+  plyo: [
+    'Skaters', 'Jumping Lunges', 'Broad Jumps', 'Wall Balls',
+    'Ball Slams', 'Incline Runs', 'Tuck Jumps', 'Kick Sit',
+    'Kick Through', 'Obstacle Jumps', 'Burpees', 'Explosive Push-ups'
+  ],
+  shadow: [
+    'Footwork', 'Jab-Punch Combos', 'Roll Slide Combos', 'Roundhouse Drills',
+    'Side Kick Drills', 'Uppercut Drills', 'Teep Front Kick',
+    'Elbow Combos', 'Knee Combos', 'Hook Combos', 'Counter Combos'
+  ]
+};
+
+const PICK = { mobility: 3, plyo: 2, shadow: 3 };
+const LABELS = { mobility: 'Mobility', plyo: 'Plyometrics', shadow: 'Shadow Boxing' };
+const COLORS = { mobility: 'mob', plyo: 'plyo', shadow: 'shadow' };
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let logs = [];           // [{date, mobility:[], plyo:[], shadow:[], completed}]
+let todayWorkout = null; // {mobility:[], plyo:[], shadow:[]}
+let checked = {};        // {exerciseName: bool}
+let scriptUrl = '';
+let alreadyLoggedToday = false;
+
+const LS_URL = 'strike_script_url';
+const LS_TODAY = 'strike_today_workout';
+const LS_CHECKED = 'strike_checked';
+const LS_LOGGED = 'strike_logged_date';
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+function init() {
+  // Render date
+  const now = new Date();
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('dateDay').textContent = now.getDate();
+  document.getElementById('dateLabel').textContent = `${days[now.getDay()]} ${months[now.getMonth()]}`;
+
+  // Load saved URL
+  scriptUrl = localStorage.getItem(LS_URL) || '';
+  if (scriptUrl) document.getElementById('settingsUrl').value = scriptUrl;
+
+  // Load today's saved workout
+  try {
+    const saved = localStorage.getItem(LS_TODAY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.date === todayStr()) {
+        todayWorkout = parsed.workout;
+        checked = JSON.parse(localStorage.getItem(LS_CHECKED) || '{}');
+        renderWorkout();
+      }
+    }
+  } catch(e) {}
+
+  // Check if already logged today
+  alreadyLoggedToday = localStorage.getItem(LS_LOGGED) === todayStr();
+
+  // Fetch from sheets
+  if (scriptUrl) fetchLogs();
+  else setStatus('error', 'No Apps Script URL — go to Setup tab');
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DATE
+// ══════════════════════════════════════════════════════
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatDisplayDate(str) {
+  const [y,m,d] = str.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+// ══════════════════════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════════════════════
+function setStatus(type, msg) {
+  const banner = document.getElementById('statusBanner');
+  const text = document.getElementById('statusText');
+  banner.className = 'status-banner ' + type;
+  text.textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════
+// FETCH LOGS FROM GOOGLE SHEETS
+// ══════════════════════════════════════════════════════
+async function fetchLogs() {
+  if (!scriptUrl) return;
+  setStatus('loading', 'Fetching workout history…');
+  try {
+    const res = await fetch(`${scriptUrl}?action=getLogs`, { method: 'GET' });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    logs = json.logs || [];
+    setStatus('connected', `Connected · ${logs.length} sessions loaded`);
+    renderHistory();
+    renderFrequency();
+    renderCoverage();
+    if (logs.length > 0) updateLogWrap();
+  } catch(e) {
+    setStatus('error', 'Connection failed — check Setup tab');
+    console.error(e);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// FREQUENCY CALCULATION (last 30 days)
+// ══════════════════════════════════════════════════════
+function getFrequency(category) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const freq = {};
+  WORKOUTS[category].forEach(ex => freq[ex] = 0);
+
+  logs.forEach(log => {
+    const logDate = new Date(log.date);
+    if (logDate < cutoff) return;
+    (log[category] || []).forEach(ex => {
+      if (freq[ex] !== undefined) freq[ex]++;
+    });
+  });
+  return freq;
+}
+
+// Smart selection: lowest frequency first, ensure full coverage
+function selectExercises(category, n) {
+  const freq = getFrequency(category);
+  const all = WORKOUTS[category];
+
+  // Find exercises never done (in last 30 days)
+  const neverDone = all.filter(ex => freq[ex] === 0);
+
+  // Check full coverage: if any exercise has never been done, prioritize those
+  if (neverDone.length >= n) {
+    // Shuffle and pick n from never-done
+    return shuffle(neverDone).slice(0, n);
+  }
+
+  // Sort by frequency ascending, then shuffle ties
+  const sorted = [...all].sort((a, b) => {
+    const diff = freq[a] - freq[b];
+    if (diff !== 0) return diff;
+    return Math.random() - 0.5;
+  });
+
+  // Pick n lowest, but exclude today's already picked if regenerating
+  return sorted.slice(0, n);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ══════════════════════════════════════════════════════
+// GENERATE WORKOUT
+// ══════════════════════════════════════════════════════
+function generateWorkout() {
+  setBtnLoading(true);
+  setTimeout(() => {
+    todayWorkout = {
+      mobility: selectExercises('mobility', PICK.mobility),
+      plyo: selectExercises('plyo', PICK.plyo),
+      shadow: selectExercises('shadow', PICK.shadow)
+    };
+    checked = {};
+    alreadyLoggedToday = false;
+    localStorage.setItem(LS_TODAY, JSON.stringify({ date: todayStr(), workout: todayWorkout }));
+    localStorage.setItem(LS_CHECKED, JSON.stringify(checked));
+    localStorage.removeItem(LS_LOGGED);
+    renderWorkout();
+    setBtnLoading(false);
+  }, 400);
+}
+
+function setBtnLoading(on) {
+  document.getElementById('genSpinner').classList.toggle('show', on);
+  document.getElementById('genBtnText').textContent = on ? 'Selecting…' : '⚡ Generate Today\'s Workout';
+  document.getElementById('btnGenerate').disabled = on;
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER WORKOUT
+// ══════════════════════════════════════════════════════
+function renderWorkout() {
+  if (!todayWorkout) {
+    document.getElementById('workoutDisplay').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🥊</div>
+        <div class="empty-title">No Workout Yet</div>
+        <div class="empty-sub">Tap the button above to generate today's session based on your least-practiced exercises.</div>
+      </div>`;
+    document.getElementById('logWrap').style.display = 'none';
+    return;
+  }
+
+  const freq = {
+    mobility: getFrequency('mobility'),
+    plyo: getFrequency('plyo'),
+    shadow: getFrequency('shadow')
+  };
+
+  let html = '';
+  const cats = [
+    { key: 'mobility', cat: 'mobility' },
+    { key: 'plyo', cat: 'plyo' },
+    { key: 'shadow', cat: 'shadow' }
+  ];
+
+  cats.forEach(({ key, cat }) => {
+    html += `
+      <div class="section-label">
+        <span class="section-label-text">${LABELS[cat]}</span>
+        <div class="section-label-line"></div>
+        <span class="section-label-count">${PICK[cat]} of ${WORKOUTS[cat].length}</span>
+      </div>
+      <div class="exercise-list">`;
+
+    todayWorkout[key].forEach(ex => {
+      const f = freq[cat][ex] || 0;
+      const fc = f === 0 ? 'freq-zero' : f < 3 ? 'freq-low' : f < 6 ? 'freq-mid' : 'freq-high';
+      const isDone = !!checked[ex];
+      html += `
+        <div class="exercise-card ${COLORS[cat]} ${isDone ? 'done' : ''}" id="card-${encodeEx(ex)}">
+          <input type="checkbox" class="ex-check" ${isDone ? 'checked' : ''}
+            onchange="toggleCheck(this, '${escEx(ex)}')" />
+          <div class="ex-info">
+            <div class="ex-name">${ex}</div>
+            <div class="ex-meta">Done ${f}x in last 30 days</div>
+          </div>
+          <div class="ex-freq ${fc}">${f === 0 ? 'NEW' : '×' + f}</div>
+        </div>`;
+    });
+
+    html += '</div>';
+  });
+
+  document.getElementById('workoutDisplay').innerHTML = html;
+  updateLogWrap();
+}
+
+function encodeEx(s) { return s.replace(/[^a-zA-Z0-9]/g, '_'); }
+function escEx(s) { return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+function toggleCheck(cb, ex) {
+  checked[ex] = cb.checked;
+  localStorage.setItem(LS_CHECKED, JSON.stringify(checked));
+  const card = document.getElementById('card-' + encodeEx(ex));
+  if (card) card.classList.toggle('done', cb.checked);
+  updateLogWrap();
+}
+
+function updateLogWrap() {
+  const logWrap = document.getElementById('logWrap');
+  if (!todayWorkout) { logWrap.style.display = 'none'; return; }
+  if (alreadyLoggedToday) {
+    document.getElementById('btnLog').textContent = '✓ Logged Today';
+    document.getElementById('btnLog').disabled = true;
+  } else {
+    document.getElementById('btnLog').textContent = '✓ Log This Session';
+    document.getElementById('btnLog').disabled = false;
+  }
+  logWrap.style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+// LOG SESSION
+// ══════════════════════════════════════════════════════
+function openLogModal() {
+  if (!scriptUrl) { showToast('Set up Apps Script URL first', 'error'); switchTab('settings'); return; }
+  document.getElementById('logModal').classList.add('open');
+}
+function closeLogModal() {
+  document.getElementById('logModal').classList.remove('open');
+}
+
+async function confirmLog() {
+  if (!todayWorkout || !scriptUrl) return;
+  const completed = document.getElementById('logCompleted').checked;
+
+  document.getElementById('logSpinner').classList.add('show');
+  document.getElementById('logBtnText').textContent = 'Saving…';
+  document.getElementById('btnLog').disabled = true;
+
+  try {
+    const payload = {
+      action: 'logSession',
+      mobility: todayWorkout.mobility,
+      plyo: todayWorkout.plyo,
+      shadow: todayWorkout.shadow,
+      completed
+    };
+
+    const res = await fetch(scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    // Save locally
+    alreadyLoggedToday = true;
+    localStorage.setItem(LS_LOGGED, todayStr());
+
+    closeLogModal();
+    showToast('Session logged ✓', 'success');
+    updateLogWrap();
+
+    // Re-fetch logs
+    await fetchLogs();
+  } catch(e) {
+    showToast('Failed to log — check connection', 'error');
+    console.error(e);
+  } finally {
+    document.getElementById('logSpinner').classList.remove('show');
+    document.getElementById('logBtnText').textContent = 'Log It';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// COVERAGE BAR
+// ══════════════════════════════════════════════════════
+function renderCoverage() {
+  const total = WORKOUTS.mobility.length + WORKOUTS.plyo.length + WORKOUTS.shadow.length;
+  const freq = {
+    mobility: getFrequency('mobility'),
+    plyo: getFrequency('plyo'),
+    shadow: getFrequency('shadow')
+  };
+
+  let covered = 0;
+  ['mobility','plyo','shadow'].forEach(cat => {
+    WORKOUTS[cat].forEach(ex => { if (freq[cat][ex] > 0) covered++; });
+  });
+
+  const pct = Math.round((covered / total) * 100);
+  document.getElementById('coverageFill').style.width = pct + '%';
+  document.getElementById('coveragePct').textContent = `${covered}/${total} exercises`;
+  document.getElementById('coverageWrap').style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER HISTORY
+// ══════════════════════════════════════════════════════
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  document.getElementById('histCount').textContent = logs.length;
+
+  if (!logs.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No History Yet</div><div class="empty-sub">Your logged sessions will appear here.</div></div>`;
+    return;
+  }
+
+  // Most recent first
+  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30);
+
+  list.innerHTML = sorted.map(log => `
+    <div class="history-card">
+      <div class="history-card-header">
+        <span class="history-date">${formatDisplayDate(log.date)}</span>
+        <span class="history-badge ${log.completed === 'YES' || log.completed === true ? 'completed' : 'partial'}">
+          ${log.completed === 'YES' || log.completed === true ? 'Completed' : 'Partial'}
+        </span>
+      </div>
+      <div class="history-groups">
+        ${log.mobility?.length ? `
+          <div>
+            <div class="history-group-label mob">Mobility</div>
+            <div class="history-exercises">${log.mobility.map(e => `<span class="history-tag">${e}</span>`).join('')}</div>
+          </div>` : ''}
+        ${log.plyo?.length ? `
+          <div>
+            <div class="history-group-label plyo">Plyometrics</div>
+            <div class="history-exercises">${log.plyo.map(e => `<span class="history-tag">${e}</span>`).join('')}</div>
+          </div>` : ''}
+        ${log.shadow?.length ? `
+          <div>
+            <div class="history-group-label shadow">Shadow Boxing</div>
+            <div class="history-exercises">${log.shadow.map(e => `<span class="history-tag">${e}</span>`).join('')}</div>
+          </div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER FREQUENCY CHART
+// ══════════════════════════════════════════════════════
+function renderFrequency() {
+  const cats = [
+    { key: 'mobility', elId: 'freqMob', color: 'var(--mob-color)' },
+    { key: 'plyo',     elId: 'freqPlyo', color: 'var(--plyo-color)' },
+    { key: 'shadow',   elId: 'freqShadow', color: 'var(--shadow-color)' }
+  ];
+
+  cats.forEach(({ key, elId, color }) => {
+    const freq = getFrequency(key);
+    const max = Math.max(...Object.values(freq), 1);
+    const el = document.getElementById(elId);
+    el.innerHTML = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .map(([ex, count]) => `
+        <div class="freq-bar-row">
+          <div class="freq-bar-name" title="${ex}">${ex}</div>
+          <div class="freq-bar-track">
+            <div class="freq-bar-fill" style="width:${Math.round((count/max)*100)}%;background:${color}"></div>
+          </div>
+          <div class="freq-bar-num">${count}</div>
+        </div>`).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════
+function saveSettings() {
+  const url = document.getElementById('settingsUrl').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    showToast('Enter a valid Apps Script URL', 'error');
+    return;
+  }
+  scriptUrl = url;
+  localStorage.setItem(LS_URL, url);
+  showToast('Settings saved', 'success');
+  fetchLogs();
+}
+
+async function testConnection() {
+  const url = document.getElementById('settingsUrl').value.trim();
+  const result = document.getElementById('testResult');
+  if (!url) { result.textContent = 'Enter a URL first'; result.style.color = 'var(--red)'; return; }
+  result.textContent = 'Testing…';
+  result.style.color = 'var(--text-dim)';
+  try {
+    const res = await fetch(`${url}?action=ping`);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      result.textContent = `✓ Connected · ${json.timestamp}`;
+      result.style.color = 'var(--green)';
+    } else {
+      throw new Error(json.error || 'Unknown response');
+    }
+  } catch(e) {
+    result.textContent = `✗ Failed: ${e.message}`;
+    result.style.color = 'var(--red)';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════════════════
+// MODAL CLOSE ON OUTSIDE CLICK
+// ══════════════════════════════════════════════════════
+document.getElementById('logModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLogModal();
+});
+
+// ══════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
