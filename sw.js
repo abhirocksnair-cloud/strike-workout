@@ -1,4 +1,4 @@
-const CACHE = 'strike-workout-v1';
+const CACHE = 'strike-workout-v2';
 const PRECACHE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,17 +12,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Always network-first for Apps Script calls (logging/reading)
   if (e.request.url.includes('script.google.com')) {
     e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
     return;
   }
-  // Cache-first for fonts
   if (e.request.url.includes('fonts.g')) {
     e.respondWith(caches.open(CACHE).then(c => c.match(e.request).then(r => r || fetch(e.request).then(res => { c.put(e.request, res.clone()); return res; }))));
     return;
   }
-  // Cache-first for app shell
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
     if (res && res.status === 200) { const clone = res.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
     return res;
